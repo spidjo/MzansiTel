@@ -30,6 +30,19 @@ The core packages:
 - `pkg_file_utils` — handles file archiving
 - `pkg_load_core` — merges validated records into production tables using optimized `MERGE` statements
 
+## 🧩 Entity Relationship Diagram (ERD)
+
+The following ERD illustrates the core data model used in the MzansiTel Billing System, covering subscriber lifecycle, plan assignments, usage tracking, invoicing, payments, and notifications.
+
+![MzansiTel ERD](./MzansiTel_ERD.png)
+
+> The ERD shows key relationships:
+> - One-to-many between **subscriber** and **invoices**, **notifications**, **plans**
+> - Usage is tracked via **call_detail_record** tied to `msisdn`
+> - Payments are linked to invoices
+> - Plans are assigned to subscribers and reference a **tariff_plan**
+
+
 ### 💰 Billing Engine
 The billing engine is responsible for:
 
