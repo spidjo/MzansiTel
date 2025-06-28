@@ -53,7 +53,7 @@ create or replace PROCEDURE log_import_summary (
     error_count    IN NUMBER DEFAULT 0,
     status         IN VARCHAR2 DEFAULT 'SUCCESS',
     error_message  IN VARCHAR2 DEFAULT NULL
-) IS
+) IS 
 /**
  * Records summary statistics for data import operations
  * 
