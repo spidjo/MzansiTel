@@ -35,7 +35,6 @@ create or replace PACKAGE pkg_billing IS
   ) RETURN NUMBER;
 
   PROCEDURE record_payment(
-    p_subscriber_id IN NUMBER,
     p_invoice_id IN NUMBER,
     p_payment_date IN DATE DEFAULT SYSDATE,
     p_payment_amount IN NUMBER,

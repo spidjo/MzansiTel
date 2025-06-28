@@ -11,7 +11,7 @@ create or replace PACKAGE BODY pkg_file_utils AS
       src_location  => p_source_dir,
       src_filename  => p_file_name,
       dest_location => p_target_dir,
-      dest_filename => p_file_name
+      dest_filename => p_file_name || '_Processed'
     );
 
     -- Delete original

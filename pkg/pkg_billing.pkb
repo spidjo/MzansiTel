@@ -155,7 +155,6 @@ create or replace PACKAGE BODY pkg_billing IS
   END;
 
   PROCEDURE record_payment(
-    p_subscriber_id IN NUMBER,
     p_invoice_id IN NUMBER,
     p_payment_date IN DATE DEFAULT SYSDATE,
     p_payment_amount IN NUMBER,
@@ -164,18 +163,23 @@ create or replace PACKAGE BODY pkg_billing IS
   IS
     v_invoice_amount NUMBER;
     v_invoice_status VARCHAR2(20);
+    v_subscriber_id NUMBER;
   BEGIN
     -- Get invoice details first
       SELECT total_amount_due, status 
       INTO v_invoice_amount, v_invoice_status
       FROM invoice
-      WHERE invoice_id = p_invoice_id
-        AND subscriber_id = p_subscriber_id;
+      WHERE invoice_id = p_invoice_id;
 
       -- Validate payment
       IF v_invoice_status = 'PAID' THEN
         RAISE_APPLICATION_ERROR(-20004, 'Invoice is not in UNPAID status');
       END IF;
+
+      --Get subscriber ID
+      SELECT subscriber_id INTO v_subscriber_id 
+      FROM INVOICE
+      WHERE invoice_id = p_invoice_id;
 
       -- Record payment
       INSERT INTO payment (
@@ -203,10 +207,12 @@ create or replace PACKAGE BODY pkg_billing IS
                     WHEN p_payment_amount >= v_invoice_amount THEN 'PAID'
                     ELSE 'PARTIALLY_PAID'
                   END,
-          total_amount_due = total_amount_due - p_payment_amount
+          total_amount_due = total_amount_due - p_payment_amount,
+          updated_at = SYSTIMESTAMP,
+          updated_by = USER
       WHERE invoice_id = p_invoice_id;
 
-      notifications_prc(p_subscriber_id,'Payment alert',SYSDATE,'SENT','SMS', 
+      notifications_prc(v_subscriber_id,'Payment alert',SYSDATE,'SENT','SMS', 
               'Payment received: R' || TO_CHAR(p_payment_amount, '9990.00') || ' Thank you :)');
       COMMIT;
   END record_payment;
