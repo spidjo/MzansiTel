@@ -1,98 +1,120 @@
-# MzansiTel Telecom Billing ETL System
+# 📡 MzansiTel Telecom Billing System (Oracle PL/SQL)
 
-This repository contains a robust PL/SQL-based Telecom Billing System designed to handle the complete data pipeline from ingestion to monthly billing and payment recording. The solution simulates a South African telecom provider, **MzansiTel Communications**, and focuses on scalable, modular, and auditable ETL and billing operations.
+A robust telecom billing system built in Oracle PL/SQL, designed to simulate a real-world telecom provider's backend operations — from data ingestion through billing and payment, to reporting.
 
-> 🚧 *Fraud detection module is planned for a future release. Current focus: ETL + Billing + Upcoming Reporting.*
-
----
-
-## 📦 Project Overview
-
-The system is built to process and transform telecom call records, validate subscriber data, calculate charges based on dynamic tariffs, generate monthly invoices, and record payments—all within Oracle PL/SQL.
-
-### 🔁 ETL Pipeline: From CSV to Production
-The ETL process supports bulk loading of external data files (CSV) for:
-
-- **Subscribers**
-- **Tariff Plans**
-- **Subscriber Plans**
-- **Call Detail Records (CDRs)**
-
-Each file is loaded into **staging tables** using external tables and PL/SQL utilities that:
-- Validate data integrity (type checks, required fields, reference lookups)
-- Log and handle errors in a centralized logging table
-- Track statistics like load counts and errors
-- Move and compress processed CSV files to an archive folder
-
-The core packages:
-- `pkg_csv_loader` — reads and prepares raw files
-- `pkg_load_staging` — validates and loads data into staging
-- `pkg_file_utils` — handles file archiving
-- `pkg_load_core` — merges validated records into production tables using optimized `MERGE` statements
-
-## 🧩 Entity Relationship Diagram (ERD)
-
-The following ERD illustrates the core data model used in the MzansiTel Billing System, covering subscriber lifecycle, plan assignments, usage tracking, invoicing, payments, and notifications.
-
-![MzansiTel ERD](./MzansiTel_ERD.png)
-
-> The ERD shows key relationships:
-> - One-to-many between **subscriber** and **invoices**, **notifications**, **plans**
-> - Usage is tracked via **call_detail_record** tied to `msisdn`
-> - Payments are linked to invoices
-> - Plans are assigned to subscribers and reference a **tariff_plan**
-
-
-### 💰 Billing Engine
-The billing engine is responsible for:
-
-- Calculating usage-based charges per subscriber
-- Fetching appropriate tariff rates from plans
-- Generating monthly invoices
-- Recording payments and updating invoice statuses
-- Sending notifications (email/SMS) via the `notifications_prc` utility
-
-Key modules:
-- `pkg_billing` — billing core logic (calculate, generate, compute, record)
-- `tariff_plan`, `invoice`, and `payment` — production tables used in billing
-
-### 📊 Upcoming Reporting Phase
-The next milestone will introduce a **Reporting Layer** that will offer:
-
-- Invoice summaries per billing period
-- Usage trends per subscriber or plan
-- Outstanding payments and debt age analysis
-- Error and exception reporting across ETL
-
-Reports will be generated using:
-- Materialized views / analytical queries
-- PL/SQL summary procedures
-- Possibly integration with Oracle BI or external reporting tools
+> ⚠️ Fraud detection is not included in this phase — it will be integrated in future iterations.
 
 ---
 
-## 💡 Skills & Technologies Demonstrated
+## 🚀 Overview
 
-- Advanced **PL/SQL** development
-- External table management and bulk file loading
-- Data validation and error handling
-- Modular and reusable package-based architecture
-- Transaction control and exception safety
-- Performance optimization (indexes, batching, `MERGE`)
-- File system interaction via Oracle `UTL_FILE`
-- Notification integration for email/SMS alerts
-- Clean separation of **staging**, **core**, and **archive** logic
+**MzansiTel** is a fictional South African telecom operator. This project replicates their data flow and business processes using PL/SQL — providing a hands-on showcase of telco operations, including:
+
+- External file ingestion via Oracle External Tables
+- Staging data validation with error handling
+- Subscriber billing & usage charge computation
+- Payment tracking
+- Monthly invoicing
+- Future-ready reporting framework
 
 ---
 
-## 📂 Directory Structure (Coming Soon)
+## 📦 Modules
 
-```bash
-├── ddl/                    # Table, index, and constraint definitions
-├── pkg/                    # All PL/SQL packages (CSV, staging, billing, file utils)
-├── data/                   # Sample CSVs for testing
-├── logs/                   # Load and error logs
-├── archive/                # Processed files
-├── reports/                # To be added in next phase
-├── README.md
-└── LICENSE
+### 1. **ETL Pipeline**
+**Goal:** Load and clean raw telecom data from external CSV files.
+
+- **External Table Creation Script**  
+  Dynamically creates external tables using date-named CSVs (e.g., `cdr_data_20250628.csv`).  
+  Supports:
+  - `Call Detail Records (CDR)`
+  - `Subscribers`
+  - `Tariff Plans`
+  - `Subscriber Plans`  
+  → Located in: `etl/create_external_tables.sql`
+
+- **`pkg_load_staging`**  
+  Reads from the external tables and performs:
+  - Data type validation
+  - Referential checks
+  - Error logging
+  - Staging table population
+
+---
+
+### 2. **Billing Engine**
+**Goal:** Automate charge calculations and invoice generation.
+
+- **`pkg_billing`**  
+  Implements:
+  - Monthly charge computation based on tariff and usage
+  - Generation of subscriber invoices
+  - Payment recording and linking to invoices
+  - Pro-rata plan fee handling
+
+---
+
+### 3. **Upcoming: Reporting Suite**
+> 📊 *Planned for the next phase*
+
+Will support:
+- Revenue analytics
+- Customer usage trends
+- Outstanding payments & churn risk
+- Package-level profitability insights
+
+---
+
+## 🗃️ Entity Relationship Diagram (ERD)
+
+![MzansiTel ERD](./assets/MzansiTel_ERD.png)
+
+This ERD models the production schema including subscribers, plans, invoices, payments, and usage data (CDRs).
+
+---
+
+## ⚙️ Technologies Used
+
+- **Oracle 19c+**
+- **PL/SQL**
+- **Oracle External Tables**
+- **Dynamic SQL**
+- **Error logging and exception management**
+- **Relational modeling best practices**
+
+---
+
+## 📁 Directory Structure
+
+```
+mzansitel-billing/
+├── etl/
+│   └── create_external_tables.sql
+│   └── pkg_load_staging.pks / .pkb
+├── billing/
+│   └── pkg_billing.pks / .pkb
+├── assets/
+│   └── MzansiTel_ERD.png
+├── LICENSE
+└── README.md
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
+
+---
+
+## 🙌 Contributions
+
+While this is a solo learning and design project, suggestions are welcome via Issues or Pull Requests.
+
+---
+
+## 📬 Contact
+
+Built and maintained by [Your Name or GitHub Handle]  
+📧 Email: you@example.com  
+🌍 [LinkedIn | Portfolio | Blog] *(Optional)*
