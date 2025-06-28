@@ -120,7 +120,7 @@ mzansitel-billing/
 ├── pkg/                    # All PL/SQL packages (staging, billing, file utils)
 ├── data/                   # Sample CSVs for testing
 ├── logs/                   # Load and error logs
-├── archive/                # Compressed processed files
+├── archive/                # Processed files
 ├── reports/                # To be added in next phase
 ├── README.md
 └── LICENSE
