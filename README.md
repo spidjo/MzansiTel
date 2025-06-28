@@ -88,15 +88,14 @@ This ERD models the production schema including subscribers, plans, invoices, pa
 
 ```
 mzansitel-billing/
-├── etl/
-│   └── create_external_tables.sql
-│   └── pkg_load_staging.pks / .pkb
-├── billing/
-│   └── pkg_billing.pks / .pkb
-├── assets/
-│   └── MzansiTel_ERD.png
-├── LICENSE
-└── README.md
+├── ddl/                    # Table, index, and constraint definitions, External tables creation
+├── pkg/                    # All PL/SQL packages (staging, billing, file utils)
+├── data/                   # Sample CSVs for testing
+├── logs/                   # Load and error logs
+├── archive/                # Compressed processed files
+├── reports/                # To be added in next phase
+├── README.md
+└── LICENSE
 ```
 
 ---
