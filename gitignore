@@ -1,0 +1,18 @@
+# Ignore Oracle data directories and temp files
+*.log
+*.tmp
+*.bak
+.DS_Store
+.idea/
+*.dmp
+*.dat
+*.csv
+
+# Ignore compiled binaries
+*.o
+*.so
+*.class
+
+# Ignore local environment settings
+.env
+.vscode/
