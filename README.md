@@ -91,7 +91,8 @@ Reports will be generated using:
 
 ## 🗃️ Entity Relationship Diagram (ERD)
 
-![MzansiTel ERD](./assets/MzansiTel_ERD.png)
+![MzansiTel_ERD](https://github.com/user-attachments/assets/8777b14c-4fca-4de8-9152-1724558f2fcb)
+
 
 This ERD models the production schema including subscribers, plans, invoices, payments, and usage data (CDRs).
 
