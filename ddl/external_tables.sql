@@ -38,6 +38,21 @@ BEGIN
     Special Handling: Timestamp fields with precise format
     ====================================================================
     */
+
+    -- DROP EXTERNA TABLES IF THEY EXIST
+   BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE external_cdr_file';
+    EXECUTE IMMEDIATE 'DROP TABLE external_subscriber_file';
+    EXECUTE IMMEDIATE 'DROP TABLE external_subscriber_plan_file';
+    EXECUTE IMMEDIATE 'DROP TABLE external_tariff_plan_file';
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE != -942 THEN 
+            RAISE;
+        END IF;
+END;
+   
+
     v_sql := 'CREATE TABLE external_cdr_file (
         subscriber_msisdn VARCHAR2(20) NOT NULL,       -- Mobile number of calling subscriber
         call_type VARCHAR2(20),                        -- Type: VOICE/SMS/DATA

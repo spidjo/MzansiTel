@@ -651,7 +651,7 @@ Error Handling:
             (
                 SELECT plan_id, RANK() OVER(PARTITION BY subscriber_msisdn 
                                             ORDER BY subscriber_msisdn, plan_start_date DESC, plan_end_date DESC) rnk
-                        FROM subscriber_plan s
+                        FROM staging_subscriber_plan s
                         WHERE subscriber_msisdn = p_msisdn
                         AND plan_start_date <= SYSDATE
                         AND (plan_end_date > SYSDATE or plan_end_date IS NULL)
@@ -660,7 +660,7 @@ Error Handling:
         -- Get plan rates
         SELECT call_rate_per_minute, sms_rate_per_message, data_rate_per_mb
           INTO v_call_rate, v_sms_rate, v_data_rate
-        FROM tariff_plan
+        FROM staging_tariff_plan
         WHERE plan_id = v_plan_id;
 
         v_call_cost := CASE p_call_type
