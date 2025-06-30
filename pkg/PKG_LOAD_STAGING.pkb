@@ -163,7 +163,7 @@ Error Handling:
                 l_cdr_data(i).subscriber_msisdn, l_cdr_data(i).call_type,
                 l_cdr_data(i).call_start_time, l_cdr_data(i).call_end_time,
                 l_cdr_data(i).call_duration_sec, l_cdr_data(i).destination_number,
-                calculate_cost(l_cdr_data(i).subscriber_msisdn,l_cdr_data(i).call_type,l_cdr_data(i).call_duration_sec), 
+                NVL(calculate_cost(l_cdr_data(i).subscriber_msisdn,l_cdr_data(i).call_type,l_cdr_data(i).call_duration_sec),0), 
                 l_cdr_data(i).call_direction,
                 l_cdr_data(i).source_file_name, v_load_time
                 );
@@ -654,7 +654,7 @@ Error Handling:
                         FROM staging_subscriber_plan s
                         WHERE subscriber_msisdn = p_msisdn
                         AND plan_start_date <= SYSDATE
-                        AND (plan_end_date > SYSDATE or plan_end_date IS NULL)
+                        AND (plan_end_date >= SYSDATE or plan_end_date IS NULL)
             ) t 
             WHERE rnk = 1;
         -- Get plan rates
@@ -673,7 +673,7 @@ Error Handling:
                 ELSE
                     0
             END;
-        RETURN v_call_cost;
+        RETURN NVL(v_call_cost,0);
     END calculate_cost;
 
 END pkg_load_staging;
