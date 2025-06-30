@@ -449,6 +449,7 @@ CREATE INDEX idx_subscriber_plan_active ON subscriber_plan(
 CREATE INDEX idx_stg_cdr_subscriber_msisdn ON staging_cdr(subscriber_msisdn);
 CREATE INDEX idx_stg_cdr_subs_msisdn_ct_cst_cet ON staging_cdr(
     subscriber_msisdn, call_type, call_start_time, call_end_time);
+CREATE INDEX idx_stg_subscriber_plan_msisdn ON staging_subscriber_plan(subscriber_msisdn);
 
 -- ====================================================================
 -- END OF SCHEMA CREATION SCRIPT

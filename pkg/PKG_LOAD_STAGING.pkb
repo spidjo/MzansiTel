@@ -31,7 +31,7 @@ Dependencies:
 - Logging procedures: log_error, log_import_summary
 
 Usage:
-1. Individual loads: Call specific procedures (load_cdr_data, load_subscriber_data, etc.)
+1. Individual loads: Call specific procedures (p_load_cdr_data, p_load_subscriber_data, etc.)
 2. Full load: Call load_all procedure with optional truncation (clear_tables => 'YES')
 
 Error Handling:
@@ -62,7 +62,7 @@ Error Handling:
     PRAGMA EXCEPTION_INIT(e_dml_errors, -24381);
 
     /* ===================================================================
-    Procedure: handle_row_error
+    Procedure: p_handle_row_error
     Purpose: Centralized error handling for individual record failures
 
     Parameters:
@@ -73,10 +73,10 @@ Error Handling:
 
     Behavior:
     - Increments the error counter
-    - Logs the error details via log_processing_error
+    - Logs the error details via p_log_processing_error
     - Allows processing to continue with next record
     =================================================================== */
-    PROCEDURE handle_row_error(
+    PROCEDURE p_handle_row_error(
         p_step         VARCHAR2,
         p_error        VARCHAR2,
         p_record       VARCHAR2,
@@ -84,11 +84,11 @@ Error Handling:
         ) IS
     BEGIN
         v_error_count := v_error_count + 1;
-        log_processing_error(p_step, 'STAGING_CDR', SYSTIMESTAMP, p_error, p_record, p_source_file);
+        p_log_processing_error(p_step, 'STAGING_CDR', SYSTIMESTAMP, p_error, p_record, p_source_file);
     END;
 
     /* ===================================================================
-    Procedure: load_cdr_data
+    Procedure: p_load_cdr_data
     Purpose: Loads and validates Call Detail Records from external files
 
     Process Flow:
@@ -108,7 +108,7 @@ Error Handling:
     - Uses BULK COLLECT for efficient memory usage
     - Processes ~10,000 records per batch (configurable)
     =================================================================== */
-    PROCEDURE load_cdr_data IS
+    PROCEDURE p_load_cdr_data IS
     CURSOR c_cdr IS
         SELECT /*+ FIRST_ROWS(100) */
         c.subscriber_msisdn,
@@ -129,7 +129,7 @@ Error Handling:
 
     BEGIN
         -- Initialize counters and timestamps
-        init_variables;
+        p_init_variables;
 
         OPEN c_cdr;
         LOOP
@@ -163,7 +163,8 @@ Error Handling:
                 l_cdr_data(i).subscriber_msisdn, l_cdr_data(i).call_type,
                 l_cdr_data(i).call_start_time, l_cdr_data(i).call_end_time,
                 l_cdr_data(i).call_duration_sec, l_cdr_data(i).destination_number,
-                l_cdr_data(i).call_cost, l_cdr_data(i).call_direction,
+                calculate_cost(l_cdr_data(i).subscriber_msisdn,l_cdr_data(i).call_type,l_cdr_data(i).call_duration_sec), 
+                l_cdr_data(i).call_direction,
                 l_cdr_data(i).source_file_name, v_load_time
                 );
 
@@ -181,7 +182,7 @@ Error Handling:
                                     l_cdr_data(i).destination_number || ',' ||
                                     l_cdr_data(i).call_cost || ',' ||
                                     l_cdr_data(i).call_direction;
-                handle_row_error('PKG_LOAD_STAGING.LOAD_CDR_DATA', v_error_message, v_error_record, l_cdr_data(i).source_file_name);
+                p_handle_row_error('PKG_LOAD_STAGING.p_load_cdr_data', v_error_message, v_error_record, l_cdr_data(i).source_file_name);
             END;
             END LOOP;
         END LOOP;
@@ -201,10 +202,10 @@ Error Handling:
         IF v_error_count = 0 THEN
             pkg_file_utils.archive_file(p_file_name => 'cdr_data_' || TO_CHAR(sysdate, 'YYYYMMDD') || '.csv');
         END IF;
-    END load_cdr_data;
+    END p_load_cdr_data;
 
     /* ===================================================================
-    Procedure: load_subscriber_data
+    Procedure: p_load_subscriber_data
     Purpose: Loads and validates subscriber information with deduplication
 
     Key Features:
@@ -218,7 +219,7 @@ Error Handling:
     Notes:
     - Uses ROW_NUMBER() for efficient deduplication
     =================================================================== */
-    PROCEDURE load_subscriber_data IS
+    PROCEDURE p_load_subscriber_data IS
     CURSOR c_subscriber IS
         SELECT msisdn, first_name, last_name, date_of_birth, email_address, registration_date, status, source_file_name
         FROM (
@@ -231,7 +232,7 @@ Error Handling:
     l_subscriber_data tab_subscriber;
 
     BEGIN
-        init_variables;
+        p_init_variables;
 
         OPEN c_subscriber;
         LOOP
@@ -275,8 +276,8 @@ Error Handling:
                                     l_subscriber_data(i).registration_date || ',' ||
                                     l_subscriber_data(i).status || ',' ||
                                     l_subscriber_data(i).source_file_name;
-                handle_row_error(
-                    'PKG_LOAD_STAGING.LOAD_SUBSCRIBER_DATA',
+                p_handle_row_error(
+                    'PKG_LOAD_STAGING.p_load_subscriber_data',
                     v_error_message,
                     v_error_record,
                     l_subscriber_data(i).source_file_name
@@ -299,10 +300,10 @@ Error Handling:
             pkg_file_utils.archive_file(p_file_name => 'subscriber_data_' || TO_CHAR(sysdate, 'YYYYMMDD') || '.csv');
         END IF;
 
-    END load_subscriber_data;
+    END p_load_subscriber_data;
 
     /* ===================================================================
-    Procedure: load_tariff_data
+    Procedure: p_load_tariff_data
     Purpose: Loads and validates tariff plan information
 
     Key Validations:
@@ -310,7 +311,7 @@ Error Handling:
     - Mandatory plan ID
     - Valid date ranges (if both dates provided)
     =================================================================== */
-    PROCEDURE load_tariff_data IS
+    PROCEDURE p_load_tariff_data IS
     CURSOR c_tariff IS
         SELECT plan_id,
             plan_name,
@@ -331,7 +332,7 @@ Error Handling:
     l_tariff_data t_tariff;
 
     BEGIN
-        init_variables;
+        p_init_variables;
 
         OPEN c_tariff;
         FETCH c_tariff BULK COLLECT INTO l_tariff_data LIMIT v_bulk_limit;
@@ -390,8 +391,8 @@ Error Handling:
                                 l_tariff_data(i).valid_to || ',' ||
                                 l_tariff_data(i).source_file_name;
 
-                handle_row_error(
-                'PKG_LOAD_STAGING.LOAD_TARIFF_DATA',
+                p_handle_row_error(
+                'PKG_LOAD_STAGING.p_load_tariff_data',
                 v_error_message,
                 v_error_record,
                 l_tariff_data(i).source_file_name
@@ -412,10 +413,10 @@ Error Handling:
             pkg_file_utils.archive_file(p_file_name => 'tariff_plan_data_' || TO_CHAR(sysdate, 'YYYYMMDD') || '.csv');
         END IF;
 
-    END load_tariff_data;
+    END p_load_tariff_data;
 
     /* ===================================================================
-    Procedure: load_subscriber_plan_data
+    Procedure: p_load_subscriber_plan_data
     Purpose: Loads and validates subscriber-plan mappings
 
     Key Validations:
@@ -423,7 +424,7 @@ Error Handling:
     - Required plan ID
     - Valid date sequence (start before end)
     =================================================================== */
-    PROCEDURE load_subscriber_plan_data IS
+    PROCEDURE p_load_subscriber_plan_data IS
     CURSOR c_sub_plan IS
         SELECT /*+ FIRST_ROWS(100) */
             sp.subscriber_msisdn,
@@ -439,7 +440,7 @@ Error Handling:
     l_sub_plan t_sub_plan;
 
     BEGIN
-        init_variables;
+        p_init_variables;
 
         OPEN c_sub_plan;
         LOOP
@@ -487,8 +488,8 @@ Error Handling:
                                     l_sub_plan(i).plan_start_date || ', ' ||
                                     l_sub_plan(i).plan_end_date;
 
-                handle_row_error(
-                    'PKG_LOAD_STAGING.LOAD_SUBSCRIBER_PLAN_DATA',
+                p_handle_row_error(
+                    'PKG_LOAD_STAGING.p_load_subscriber_plan_data',
                     v_error_message,
                     v_error_record,
                     l_sub_plan(i).source_file_name
@@ -512,7 +513,7 @@ Error Handling:
             pkg_file_utils.archive_file(p_file_name => 'subscriber_plan_data_' || TO_CHAR(sysdate, 'YYYYMMDD') || '.csv');
         END IF;
 
-    END load_subscriber_plan_data;
+    END p_load_subscriber_plan_data;
 
     /* ===================================================================
     Procedure: load_all
@@ -531,7 +532,7 @@ Error Handling:
     - Maintains global counters across all loads
     - Provides atomic operation with proper rollback on failure
     =================================================================== */
-    PROCEDURE load_all(clear_tables VARCHAR2 DEFAULT 'NO') IS 
+    PROCEDURE p_load_all(clear_tables VARCHAR2 DEFAULT 'NO') IS 
         BEGIN
             -- Reset global counters for this full load operation
             g_error_count := 0;
@@ -546,10 +547,10 @@ Error Handling:
             END IF;
 
             -- Execute loads in proper sequence
-            load_subscriber_data;
-            load_tariff_data;
-            load_subscriber_plan_data;
-            load_cdr_data;
+            p_load_subscriber_data;
+            p_load_tariff_data;
+            p_load_subscriber_plan_data;
+            p_load_cdr_data;
 
             -- Record final summary
             v_load_report := CASE WHEN g_error_count > 0 THEN 'COMPLETED_WITH_ERRORS' ELSE 'SUCCESS' END;
@@ -571,10 +572,10 @@ Error Handling:
             );
             ROLLBACK;
             RAISE;
-    END load_all;
+    END p_load_all;
 
     /* ===================================================================
-    Procedure: init_variables
+    Procedure: p_init_variables
     Purpose: Resets procedure-level variables for a new load operation
 
     Resets:
@@ -582,17 +583,17 @@ Error Handling:
     - Load timestamp
     - Error tracking variables
     =================================================================== */
-    PROCEDURE init_variables IS
+    PROCEDURE p_init_variables IS
       BEGIN
           v_error_count := 0;
           v_record_count := 0;
           v_load_time := SYSTIMESTAMP;
           v_error_message := NULL;
           v_error_record := NULL;
-      END init_variables;
+      END p_init_variables;
 
     /* ===================================================================
-    Procedure: log_processing_error
+    Procedure: p_log_processing_error
     Purpose: Centralized error logging with standardized parameters
 
     Parameters:
@@ -607,7 +608,7 @@ Error Handling:
     - Wrapper around the base log_error procedure
     - Maintains consistent error logging format
     =================================================================== */
-    PROCEDURE log_processing_error(
+    PROCEDURE p_log_processing_error(
             p_process VARCHAR2,
             p_affected_table VARCHAR2,
             p_error_time TIMESTAMP,
@@ -625,6 +626,54 @@ Error Handling:
                 p_raw_record => p_raw_record,
                 p_source_file => p_source_file
             );
-    END log_processing_error;
+    END p_log_processing_error;
+
+/* ===================================================================
+    Function: calculate_cost
+    Purpose: Caluculates the cost of the call based on call duration and subscribe plan
+
+    =================================================================== */
+    FUNCTION calculate_cost(
+        p_msisdn VARCHAR2,
+        p_call_type VARCHAR2,
+        p_call_duration_sec NUMBER)
+        RETURN NUMBER 
+    IS
+    v_call_cost NUMBER;
+    v_plan_id  NUMBER;
+    v_sms_rate NUMBER;
+    v_call_rate NUMBER;
+    v_data_rate NUMBER;
+    BEGIN
+        -- Get subscriber plan
+        SELECT plan_id INTO v_plan_id 
+        FROM 
+            (
+                SELECT plan_id, RANK() OVER(PARTITION BY subscriber_msisdn 
+                                            ORDER BY subscriber_msisdn, plan_start_date DESC, plan_end_date DESC) rnk
+                        FROM subscriber_plan s
+                        WHERE subscriber_msisdn = p_msisdn
+                        AND plan_start_date <= SYSDATE
+                        AND (plan_end_date > SYSDATE or plan_end_date IS NULL)
+            ) t 
+            WHERE rnk = 1;
+        -- Get plan rates
+        SELECT call_rate_per_minute, sms_rate_per_message, data_rate_per_mb
+          INTO v_call_rate, v_sms_rate, v_data_rate
+        FROM tariff_plan
+        WHERE plan_id = v_plan_id;
+
+        v_call_cost := CASE p_call_type
+                WHEN 'VOICE' THEN
+                    (p_call_duration_sec / 60) * v_call_rate
+                WHEN 'SMS' THEN
+                    (1 * v_sms_rate)
+                WHEN 'DATA' THEN    
+                    (p_call_duration_sec / 60) * v_data_rate
+                ELSE
+                    0
+            END;
+        RETURN v_call_cost;
+    END calculate_cost;
 
 END pkg_load_staging;

@@ -41,8 +41,8 @@ BEGIN
     v_sql := 'CREATE TABLE external_cdr_file (
         subscriber_msisdn VARCHAR2(20) NOT NULL,       -- Mobile number of calling subscriber
         call_type VARCHAR2(20),                        -- Type: VOICE/SMS/DATA
-        call_start_time DATE,                          -- When call/SMS/data session started
-        call_end_time DATE,                            -- When call/SMS/data session ended
+        call_start_time TIMESTAMP,                     -- When call/SMS/data session started
+        call_end_time TIMESTAMP,                       -- When call/SMS/data session ended
         call_duration_sec NUMBER,                      -- Duration in seconds
         destination_number VARCHAR2(20),               -- Called/SMSed number
         call_cost NUMBER,                              -- Cost of the call/SMS/data

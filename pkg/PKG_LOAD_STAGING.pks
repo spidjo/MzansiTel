@@ -19,19 +19,19 @@ tariff plans, and subscriber plan mappings. The package features:
 
 
   -- Loads CDR data from external table into staging table
-  PROCEDURE load_cdr_data;
+  PROCEDURE p_load_cdr_data;
 
   -- Loads subscriber data from external table
-  PROCEDURE load_subscriber_data;
+  PROCEDURE p_load_subscriber_data;
 
   -- Loads tariff data
-  PROCEDURE load_tariff_data; 
+  PROCEDURE p_load_tariff_data; 
 
-  PROCEDURE load_subscriber_plan_data;
+  PROCEDURE p_load_subscriber_plan_data;
 
-  PROCEDURE load_all(clear_tables VARCHAR2 DEFAULT 'NO');
+  PROCEDURE p_load_all(clear_tables VARCHAR2 DEFAULT 'NO');
 
-  PROCEDURE log_processing_error(
+  PROCEDURE p_log_processing_error(
     p_process VARCHAR2,
     p_affected_table VARCHAR2,
     p_error_time TIMESTAMP,
@@ -40,6 +40,13 @@ tariff plans, and subscriber plan mappings. The package features:
     p_source_file VARCHAR2
   );
 
-  PROCEDURE init_variables;
+  PROCEDURE p_init_variables;
+
+  FUNCTION calculate_cost(
+        p_msisdn VARCHAR2,
+        p_call_type VARCHAR2,
+        p_call_duration_sec NUMBER)
+        RETURN NUMBER;
+
 
 END pkg_load_staging;
